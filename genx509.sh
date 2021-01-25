@@ -143,9 +143,10 @@ if [ $SIGN_TYPE = "CA-signed" ]; then
   fi
 elif [ $SIGN_TYPE = "Self-signed" ]; then
   all_args="${@}"
-
+  # https://en.wikipedia.org/wiki/Year_2038_problem
+  days=$((( $((2**31)) - $(date +%s))/86400-1))
   # For self-signed there is ONLY "CN=blah", and NO SubjAltNames.
-  eval "openssl req -nodes -days 3650 -x509 -subj '/CN=${all_args}/' ${KEY_SPEC}"
+  eval "openssl req -nodes -days ${days} -x509 -subj '/CN=${all_args}/' ${KEY_SPEC}"
 else
   echo "Not implemented yet"
 fi
