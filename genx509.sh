@@ -3,7 +3,7 @@
 # Interactive script to generate a X.509 private key and corresponding
 # Certificate Signing Request (CSR), or create a self-signed certificate.
 # For increased security, the private key is not written to disk.
-# 
+#
 # Can also use an existing private key, by piping the PEM formatted value to
 # the script.
 #
@@ -18,7 +18,7 @@ RSA_SIZES=(2048 3072 4096)
 
 # Help message if not enough parameters are provided
 if [ $# -lt 1 ]; then
-  me=`basename ${BASH_SOURCE}`
+  me=$(basename "${BASH_SOURCE[0]}")
   echo "Usage: $me cn <san_1 san_2 san_3 san_4 ... san_n>
 The first argument is cn (Common Name).
 Optional further arguments are treated as Subject Altenative Names.
@@ -96,7 +96,7 @@ fi
 # common, for instance for SAML certificates.
 echo "Select signing type"
 SIGN_TYPE=$(selectWithDefault "${SIGN_TYPES[@]}")
-if [ $SIGN_TYPE = "Self-signed" ]; then
+if [ "$SIGN_TYPE" = "Self-signed" ]; then
   KEY_TYPES=(RSA ECC)
 fi
 
@@ -112,13 +112,15 @@ if [ -z "$PRIVATE_KEY" ]; then
     echo "Select curve"
     EC_CURVE=$(selectWithDefault "${EC_CURVES[@]}")
     EC_PARAMS=$(mktemp)
-    openssl ecparam -name ${EC_CURVE} -out ${EC_PARAMS}
-    KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout 2>/dev/null"
+    openssl ecparam -name "${EC_CURVE}" -out "${EC_PARAMS}"
+    # KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout 2>/dev/null"
+    KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout"
   elif [ "$KEY_TYPE" = "RSA" ]; then
     # Select RSA key size
     echo "Select RSA size"
     RSA_SIZE=$(selectWithDefault "${RSA_SIZES[@]}")
-    KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout 2>/dev/null"
+    # KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout 2>/dev/null"
+    KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout"
   else
     echo "Not implemented yet"
   fi
@@ -129,30 +131,29 @@ fi
 
 
 
-if [ $SIGN_TYPE = "CA-signed" ]; then
+if [ "${SIGN_TYPE}" = "CA-signed" ]; then
   if [ $# -eq 1 ]; then
     # One argument => simple scenario
     eval "openssl req -nodes -subj /CN=${1}/ $KEY_SPEC"
   else
     # More than one argument => first arg is CN, the rest is the list of SANs
     s="subjectAltName="
-    for san in `echo $@`; do s="${s}DNS:$san,"; done
-    eval "openssl req -nodes -subj /CN=${1}/ ${KEY_SPEC} \
+    for san in "$@"; do s="${s}DNS:${san},"; done
+    echo eval "openssl req -nodes -subj /CN=${1}/ ${KEY_SPEC} \
       -reqexts SAN -extensions SAN \
-      -config <(printf \"[req]\ndistinguished_name=rdn\n[rdn]\n[SAN]\n`echo ${s} | sed 's/.$//'`\")"
+      -config <(printf \"[req]\ndistinguished_name=rdn\n[rdn]\n[SAN]\n${s::-1}\")"
   fi
-elif [ $SIGN_TYPE = "Self-signed" ]; then
-  all_args="${@}"
+elif [ "$SIGN_TYPE" = "Self-signed" ]; then
   # https://en.wikipedia.org/wiki/Year_2038_problem
   days=$((( $((2**31)) - $(date +%s))/86400-1))
   # For self-signed there is ONLY "CN=blah", and NO SubjAltNames.
-  eval "openssl req -nodes -days ${days} -x509 -subj '/CN=${all_args}/' ${KEY_SPEC}"
+  eval "openssl req -nodes -days ${days} -x509 -subj '/CN=$*/' ${KEY_SPEC}"
 else
   echo "Not implemented yet"
 fi
 
 
 # Clean up temporary EC params file
-if [ -n "$EC_PARAMS" ]; then
+if [ -n "${EC_PARAMS}" ]; then
   rm "${EC_PARAMS}"
 fi
