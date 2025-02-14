@@ -113,14 +113,12 @@ if [ -z "$PRIVATE_KEY" ]; then
     EC_CURVE=$(selectWithDefault "${EC_CURVES[@]}")
     EC_PARAMS=$(mktemp)
     openssl ecparam -name "${EC_CURVE}" -out "${EC_PARAMS}"
-    # KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout 2>/dev/null"
-    KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout"
+    KEY_SPEC="-newkey ec:${EC_PARAMS} -keyout /dev/stdout 2>/dev/null"
   elif [ "$KEY_TYPE" = "RSA" ]; then
     # Select RSA key size
     echo "Select RSA size"
     RSA_SIZE=$(selectWithDefault "${RSA_SIZES[@]}")
-    # KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout 2>/dev/null"
-    KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout"
+    KEY_SPEC="-newkey rsa:${RSA_SIZE} -keyout /dev/stdout 2>/dev/null"
   else
     echo "Not implemented yet"
   fi
@@ -134,12 +132,13 @@ fi
 if [ "${SIGN_TYPE}" = "CA-signed" ]; then
   if [ $# -eq 1 ]; then
     # One argument => simple scenario
-    eval "openssl req -nodes -subj /CN=${1}/ $KEY_SPEC"
+    eval "openssl req -nodes -subj '/CN=$1/' $KEY_SPEC"
   else
     # More than one argument => first arg is CN, the rest is the list of SANs
     s="subjectAltName="
     for san in "$@"; do s="${s}DNS:${san},"; done
-    echo eval "openssl req -nodes -subj /CN=${1}/ ${KEY_SPEC} \
+
+    echo eval "openssl req -nodes -subj '/CN=${1}/' ${KEY_SPEC} \
       -reqexts SAN -extensions SAN \
       -config <(printf \"[req]\ndistinguished_name=rdn\n[rdn]\n[SAN]\n${s::-1}\")"
   fi
