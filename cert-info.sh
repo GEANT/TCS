@@ -284,24 +284,30 @@ else
         if [ -n "$OPENSSL_IP_FLAG" ]; then
             OPENSSL_ARGS+=("$OPENSSL_IP_FLAG")
         fi
-        OPENSSL_ARGS+=("${STARTTLS_CMD[@]}" -crlf)
+        OPENSSL_ARGS+=("${STARTTLS_CMD[@]}")
 
         echo Q | openssl s_client "${OPENSSL_ARGS[@]}" 2>/dev/null | \
         openssl x509 -outform PEM > "$CERT_FILE" 2>/dev/null
 
-        # If --ip was not provided, use curl -w %{remote_ip} to detect the resolved connected IP
+        # If --ip was not provided, determine the resolved IP
         if [ -n "$CLEAN_IP" ]; then
             CONNECTED_IP="$CLEAN_IP"
-        else
-            CURL_SCHEME="https"
-            if [ "$SCHEME" = "http" ]; then
-                CURL_SCHEME="http"
-            fi
+        elif [ "$SCHEME" = "http" ] || [ "$SCHEME" = "https" ]; then
+            CURL_SCHEME="$SCHEME"
             CURL_IP_ARGS=(-s -o /dev/null -w "%{remote_ip}")
             if [ -n "$CURL_IP_FLAG" ]; then
                 CURL_IP_ARGS+=("$CURL_IP_FLAG")
             fi
             CONNECTED_IP=$(curl "${CURL_IP_ARGS[@]}" "${CURL_SCHEME}://${HOST}:${PORT}" 2>/dev/null)
+        else
+            # For non-HTTP services like LDAPS, resolve IP address using standard tools
+            if command -v getent >/dev/null 2>&1; then
+                CONNECTED_IP=$(getent ahosts "$HOST" 2>/dev/null | awk '{print $1; exit}')
+            elif command -v host >/dev/null 2>&1; then
+                CONNECTED_IP=$(host "$HOST" 2>/dev/null | awk '/has address/ {print $4; exit}')
+            elif command -v nslookup >/dev/null 2>&1; then
+                CONNECTED_IP=$(nslookup "$HOST" 2>/dev/null | awk '/^Address: / {print $2; exit}')
+            fi
         fi
     fi
 fi
@@ -484,13 +490,8 @@ if [ "$OUTPUT_JSON" -eq 1 ]; then
         exit 1
     fi
 
-    CRT_CONTENT=""
-    if [ "$PRINT_CRT" -eq 1 ]; then
-        CRT_CONTENT=$(cat "$CERT_FILE")
-    fi
-
-    # Pass bash variables directly into jq using --arg / --argjson / $ARGS.positional
-    jq -n -S \
+    # Build base JSON object
+    BASE_JSON=$(jq -n -S \
       --arg timestamp "$EXECUTION_TIMESTAMP" \
       --arg ip "$CONNECTED_IP" \
       --arg issuer "$ISSUER_RAW" \
@@ -500,13 +501,11 @@ if [ "$OUTPUT_JSON" -eq 1 ]; then
       --arg serial "$SERIAL" \
       --arg subject "$SUBJECT_RAW" \
       --arg subject_cn "$SUBJECT_CN" \
-      --arg crt "$CRT_CONTENT" \
       --arg crl "$CRL_URL" \
       --argjson crl_file_size "$CRL_SIZE_BYTES" \
       --argjson crl_entries "$TOTAL_ENTRIES" \
       --argjson crt_in_crl "$CRT_IN_CRL" \
       --argjson check_crl "$CHECK_CRL" \
-      --argjson print_crt "$PRINT_CRT" \
       '
       {
         timestamp: $timestamp,
@@ -520,14 +519,21 @@ if [ "$OUTPUT_JSON" -eq 1 ]; then
         subject_cn: $subject_cn,
         subject_alt_names: $ARGS.positional
       }
-      + if $print_crt == 1 then { crt: $crt } else {} end
       + if $check_crl == 1 then {
         crl: $crl,
         crl_file_size: $crl_file_size,
         crl_entries: $crl_entries,
         crt_in_crl: $crt_in_crl
       } else {} end
-      ' --args "${UNIQUE_SANS[@]}"
+      ' --args "${UNIQUE_SANS[@]}")
+
+    # Optionally add 'crt' key only when --print-crt is specified
+    if [ "$PRINT_CRT" -eq 1 ]; then
+        CRT_CONTENT=$(cat "$CERT_FILE")
+        jq -S --arg crt "$CRT_CONTENT" '. + {crt: $crt}' <<< "$BASE_JSON"
+    else
+        echo "$BASE_JSON"
+    fi
 
     exit $EXIT_CODE
 fi
