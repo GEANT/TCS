@@ -214,3 +214,28 @@ debian@forky ~$ ./cert-info.sh --crl -6 --print-crt www.geant.org --json
   "timestamp": "2026-07-29T14:08:58Z"
 }
 ```
+
+```jsonc
+// debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
+{
+  "crl": "[http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl](http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl)",
+  "crl_entries": 130861,
+  "crl_file_size": 6356836,
+  "ip": "2001:718:ff05:206::147",
+  "issuer": "CN=GEANT TLS ECC 1,O=Hellenic Academic and Research Institutions CA,C=GR",
+  "issuer_cn": "GEANT TLS ECC 1",
+  "not_after": "2027-02-03T14:52:56Z",
+  "not_before": "2026-07-19T14:52:57Z",
+  "revocation_date": "2026-07-25T11:02:36Z",
+  "revocation_reason": "Superseded",
+  "revoked": true,
+  "serial": "12fcc79b4e56a9650939c29288d0a1fe",
+  "subject": "CN=*.test.eduteams.org",
+  "subject_alt_names": [
+    "*.test.eduteams.org",
+    "test.eduteams.org"
+  ],
+  "subject_cn": "*.test.eduteams.org",
+  "timestamp": "2026-07-29T14:53:41Z"
+}
+```
