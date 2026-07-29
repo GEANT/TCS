@@ -241,3 +241,44 @@ debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
   "timestamp": "2026-07-29T14:53:41Z"
 }
 ```
+
+# Combining things
+
+The `genx509.sh` and `cert-info.sh` script can be combined:
+
+
+```console
+# Fetch info on a current cert, and generate a new key and CSR using the
+# existing common name/subject alt names
+debian@trixie ~$ genx509.sh $(cert-info.sh --only-sans www.geant.org)
+Select signing type
+1) CA-signed *
+2) Self-signed
+#?
+Select key type
+1) ECC *
+2) RSA
+#?
+Select curve
+1) prime256v1 *
+2) secp384r1
+#?
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQghzL1aJM+dBVhyIFf
+q6A+TSo7S/fzF/flN0pKrXKGQJKhRANCAAThf5trSRnLN+iqkltDQY6K3HGIiQ5J
+1UQ1W7Nkzwl/aXttwI5ZCDyE8k5emITF6+fMawJNhVwvCcOZGh+wW38d
+-----END PRIVATE KEY-----
+-----
+-----BEGIN CERTIFICATE REQUEST-----
+MIIByDCCAW0CAQAwGDEWMBQGA1UEAwwNd3d3LmdlYW50Lm9yZzBZMBMGByqGSM49
+AgEGCCqGSM49AwEHA0IABOF/m2tJGcs36KqSW0NBjorccYiJDknVRDVbs2TPCX9p
+e23AjlkIPITyTl6YhMXr58xrAk2FXC8Jw5kaH7Bbfx2ggfIwge8GCSqGSIb3DQEJ
+DjGB4TCB3jCB2wYDVR0RBIHTMIHQghB4bi0tZ2FudC1icGEub3JnghFlZHVjb25m
+LmdlYW50Lm9yZ4IPc3RhZ2UuZ2VhbnQub3JnghNqb2JzYm9hcmQuZ2VhbnQub3Jn
+ghRpdHNlcnZpY2VzLmdlYW50Lm9yZ4IOcHJvZC5nZWFudC5vcmeCG2ludHJhbmV0
+LmFmcmljYWNvbm5lY3QyLm5ldIISaW50cmFuZXQuZ2VhbnQubmV0gg1kZXYuZ2Vh
+bnQub3JngglnZWFudC5vcmeCEmludHJhbmV0LmdlYW50Lm9yZzAKBggqhkjOPQQD
+AgNJADBGAiEAx19rNVbHDZZ08qcdJvGJXvDb0m1hlRm8iu+xl3T3mmsCIQDy8zzr
+5na899GpI8cW4Njxrr3hjwObouDRl2V/dAMcEg==
+-----END CERTIFICATE REQUEST-----
+```
