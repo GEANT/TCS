@@ -175,25 +175,23 @@ debian@trixie ~$ ./cert-info.sh --crl -4 www.geant.org
 [+] Found CRL URL: http://crl.harica.gr/HARICA-GEANT-TLS-R1.crl
 [+] Fetching CRL...
 [+] Parsing CRL and searching for serial number...
-[+] Total Revoked Entries in CRL: 198607
+[+] Total Revoked Entries in CRL: 198700
 [+] Certificate with serial 542bfb96e6dea4458696fad63454d6c2 is not in revocation list
 ```
 
 ```console
 debian@forky ~$ ./cert-info.sh --crl -6 --print-crt www.geant.org --json
-```
-```json
 {
   "crl": "http://crl.harica.gr/HARICA-GEANT-TLS-R1.crl",
-  "crl_entries": 198607,
-  "crl_file_size": 9580976,
+  "crl_entries": 198700,
+  "crl_file_size": 9585043,
   "crt": "-----BEGIN CERTIFICATE-----\nMIIHRDCCBaygAwIBAgIQVCv7lubepEWGlvrWNFTWwjANBgkqhkiG9w0BAQsFADBg\nMQswCQYDVQQGEwJHUjE3MDUGA1UECgwuSGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJl\nc2VhcmNoIEluc3RpdHV0aW9ucyBDQTEYMBYGA1UEAwwPR0VBTlQgVExTIFJTQSAx\nMB4XDTI1MTEyNjExNTAxOVoXDTI2MTEyNjExNTAxOVowGDEWMBQGA1UEAwwNd3d3\nLmdlYW50Lm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALLeGIPv\n8P15nt6vOdHn0qOipwAa6vtUzBdh5L2SfhOf9wtx/jR/9ECkxsImTIOj3Ls/edRD\ncRvTqEBvQPXCvT8fUCK1yE8Yci7dDaNUz2jhG7AqIuFETVMlW7jcQLTyGkHlcHI7\nUjlx9W0kiDjeIhqVELqKaPa56gXTmD63Pbv9BjnLtnpFD+YIrS4G/Qp+7eXr/0SE\nYYxZjztpGnS9j3MNZM4gtdyltxapP2ZI3qT6yPOIA4sHvdaME2ps6dQSHl5tGgqw\nhk0Aqo+R/GYdyOLFfiBDd/Fa/nCOhBtWlb36HpnnpaI6QSea3b8KlGZKt7b3lWGj\nFUfxdcK+83CKcqECAwEAAaOCA8AwggO8MB8GA1UdIwQYMBaAFIYBcj+MqXDiMQZT\nFs4BX1t5yDw7MG8GCCsGAQUFBwEBBGMwYTA4BggrBgEFBQcwAoYsaHR0cDovL2Ny\ndC5oYXJpY2EuZ3IvSEFSSUNBLUdFQU5ULVRMUy1SMS5jZXIwJQYIKwYBBQUHMAGG\nGWh0dHA6Ly9vY3NwLXRscy5oYXJpY2EuZ3IwgeoGA1UdEQSB4jCB34INd3d3Lmdl\nYW50Lm9yZ4IQeG4tLWdhbnQtYnBhLm9yZ4IRZWR1Y29uZi5nZWFudC5vcmeCD3N0\nYWdlLmdlYW50Lm9yZ4ITam9ic2JvYXJkLmdlYW50Lm9yZ4IUaXRzZXJ2aWNlcy5n\nZWFudC5vcmeCDnByb2QuZ2VhbnQub3JnghtpbnRyYW5ldC5hZnJpY2Fjb25uZWN0\nMi5uZXSCEmludHJhbmV0LmdlYW50Lm5ldIINZGV2LmdlYW50Lm9yZ4IJZ2VhbnQu\nb3JnghJpbnRyYW5ldC5nZWFudC5vcmcwLQYDVR0gBCYwJDAIBgZngQwBAgEwCAYG\nBACPegEGMA4GDCsGAQQBgc8RAQEBATAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYB\nBQUHAwEwPQYDVR0fBDYwNDAyoDCgLoYsaHR0cDovL2NybC5oYXJpY2EuZ3IvSEFS\nSUNBLUdFQU5ULVRMUy1SMS5jcmwwHQYDVR0OBBYEFBpwAX5W/vtona9d6nTh1LxX\nXkGcMA4GA1UdDwEB/wQEAwIFoDCCAX0GCisGAQQB1nkCBAIEggFtBIIBaQFnAHYA\nr2eIO1ewTt2Pptl+9i6o64EKx3Fg8CReVdYML+eFhzoAAAGawAk3ZwAABAMARzBF\nAiAdeTup4DY1Ynk+1ZpNiZaencOyPUtbvSSkvsuXrytAMAIhAMVq+kWptEdmQQJi\nYZjvV4AMi5myH8su6iCJF2X6RnKEAHUA2AlVO5RPev/IFhlvlE+Fq7D4/F6HVSYP\nFdEucrtFSxQAAAGawAk3PAAABAMARjBEAiA79iXbGtouLLAPzSA+feW4cGLWCBWn\n2VbkPvofv67cNgIgQSgfBo0DgQII2F9EZgf2TXE3dIoSGs7d08K6JCyIzwkAdgCs\nqzBwbOvshDH0E9L0kV8RHkIkQ7HypoxPPCs7px4CwwAAAZrACTduAAAEAwBHMEUC\nIQCAmJ4wkbKCsYpJ3RPBHpoeDZLKimSes9eTq/TglyE7ZwIgGZ1HPvOfx79D2XIV\n/oiW1YgrychH5/pYQicGIAkx/AIwDQYJKoZIhvcNAQELBQADggGBAHzS60j+VScI\nkU1aa6848xl3Qp5chgADCxlAu6MDfqiAXmG3y9HXFOHnVPfI0VcBotVSw5+hGNjr\nOUuadYyx/K6PRwdg0SMPX+eENAG2JAcDdlnszu61HpVcokdESM/qQ3loVOgVo+W8\naX9eOZXZp3lAPAto8IDlXSzcHPvlY5YgVpE/aHUyQ/zD7EZKfKoAcGvVzp5ZGbIn\ndIGUNoXCxYMXd0meEwv5L4t2avkH0kasXoNtTTdsBHxkxVduYZNRx+BEf1269RPv\nvRK4zFbmnzN3BuaXolHhkZkTDd8nBsDMXfl7bqncQSPgC9I6XkhszvyVrD+VU+Ad\nwdVntFLLs60eB6+RYjP0a7vrCcWXgHNB7l/nYCyESh9612GYaAlylX3EffVHjXTf\nVSa1BOffHRRO9OcEHD8/vpY23E7lzsBO83KWpTpG3aGM7Xep6bR/kKSMmju4v6bk\nQqzR0y+qpqj+xm7vrXR/CKrieaAH3DVZw3rfCSHlpOUGuGIVuPmZMg==\n-----END CERTIFICATE-----",
-  "crt_in_crl": false,
   "ip": "2606:4700:7::a29f:872a",
   "issuer": "CN=GEANT TLS RSA 1,O=Hellenic Academic and Research Institutions CA,C=GR",
   "issuer_cn": "GEANT TLS RSA 1",
   "not_after": "2026-11-26T11:50:19Z",
   "not_before": "2025-11-26T11:50:19Z",
+  "revoked": false,
   "serial": "542bfb96e6dea4458696fad63454d6c2",
   "subject": "CN=www.geant.org",
   "subject_alt_names": [
@@ -211,18 +209,16 @@ debian@forky ~$ ./cert-info.sh --crl -6 --print-crt www.geant.org --json
     "intranet.geant.org"
   ],
   "subject_cn": "www.geant.org",
-  "timestamp": "2026-07-29T14:08:58Z"
+  "timestamp": "2026-07-29T16:37:59Z"
 }
 ```
 
 ```console
 debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
-```
-```json
 {
-  "crl": "[http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl](http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl)",
-  "crl_entries": 130861,
-  "crl_file_size": 6356836,
+  "crl": "http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl",
+  "crl_entries": 130829,
+  "crl_file_size": 6355283,
   "ip": "2001:718:ff05:206::147",
   "issuer": "CN=GEANT TLS ECC 1,O=Hellenic Academic and Research Institutions CA,C=GR",
   "issuer_cn": "GEANT TLS ECC 1",
@@ -238,7 +234,7 @@ debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
     "test.eduteams.org"
   ],
   "subject_cn": "*.test.eduteams.org",
-  "timestamp": "2026-07-29T14:53:41Z"
+  "timestamp": "2026-07-29T16:38:27Z"
 }
 ```
 
