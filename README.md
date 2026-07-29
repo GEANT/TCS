@@ -215,8 +215,10 @@ debian@forky ~$ ./cert-info.sh --crl -6 --print-crt www.geant.org --json
 }
 ```
 
-```jsonc
-// debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
+```console
+debian@trixie ~$ ./cert-info.sh --crl --json perun.test.eduteams.org
+```
+```json
 {
   "crl": "[http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl](http://crl.harica.gr/HARICA-GEANT-TLS-E1.crl)",
   "crl_entries": 130861,
