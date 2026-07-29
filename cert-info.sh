@@ -402,6 +402,8 @@ CRL_URL=$(openssl x509 -in "$CERT_FILE" -noout -text | grep -A 4 "CRL Distributi
 CRL_SIZE_BYTES=0
 TOTAL_ENTRIES=0
 CRT_IN_CRL="false"
+REV_DATE_ISO=""
+REV_REASON_CLEAN=""
 EXIT_CODE=0
 
 if [ -n "$CRL_URL" ]; then
@@ -442,10 +444,18 @@ if [ -n "$CRL_URL" ]; then
                     REV_DATE=$(echo "$REV_DETAILS" | grep -i "Revocation Date:" | head -n 1 | sed 's/^[[:space:]]*Revocation Date:[[:space:]]*//')
                     REV_REASON=$(echo "$REV_DETAILS" | grep -A 1 "CRL Reason Code:" | tail -n 1 | sed 's/^[[:space:]]*//')
 
+                    if [ -n "$REV_DATE" ]; then
+                        REV_DATE_ISO=$(date -u -d "$REV_DATE" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -j -f "%b %e %H:%M:%S %Y %Z" "$REV_DATE" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "$REV_DATE")
+                    fi
+
+                    if [ -n "$REV_REASON" ] && [[ ! "$REV_REASON" =~ "Revocation Date" ]]; then
+                        REV_REASON_CLEAN="$REV_REASON"
+                    fi
+
                     log "[+] Certificate with serial $SERIAL IS REVOKED"
                     log "[+] Revocation Date: ${REV_DATE:-Unknown}"
-                    if [ -n "$REV_REASON" ] && [[ ! "$REV_REASON" =~ "Revocation Date" ]]; then
-                        log "[+] Reason Code: $REV_REASON"
+                    if [ -n "$REV_REASON_CLEAN" ]; then
+                        log "[+] Reason Code: $REV_REASON_CLEAN"
                     fi
                 else
                     log "[+] Certificate with serial $SERIAL is not in revocation list"
@@ -491,7 +501,9 @@ if [ "$OUTPUT_JSON" -eq 1 ]; then
       --arg crl "$CRL_URL" \
       --argjson crl_file_size "$CRL_SIZE_BYTES" \
       --argjson crl_entries "$TOTAL_ENTRIES" \
-      --argjson crt_in_crl "$CRT_IN_CRL" \
+      --argjson revoked "$CRT_IN_CRL" \
+      --arg revocation_reason "$REV_REASON_CLEAN" \
+      --arg revocation_date "$REV_DATE_ISO" \
       --argjson check_crl "$CHECK_CRL" \
       '
       {
@@ -510,8 +522,11 @@ if [ "$OUTPUT_JSON" -eq 1 ]; then
         crl: $crl,
         crl_file_size: $crl_file_size,
         crl_entries: $crl_entries,
-        crt_in_crl: $crt_in_crl
-      } else {} end
+        revoked: $revoked
+      } + (if $revoked then {
+        revocation_reason: $revocation_reason,
+        revocation_date: $revocation_date
+      } else {} end) else {} end
       ' --args "${UNIQUE_SANS[@]}")
 
     # Optionally add 'crt' key only when --print-crt is specified
