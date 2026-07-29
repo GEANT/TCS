@@ -286,28 +286,15 @@ else
         fi
         OPENSSL_ARGS+=("${STARTTLS_CMD[@]}")
 
-        echo Q | openssl s_client "${OPENSSL_ARGS[@]}" 2>/dev/null | \
-        openssl x509 -outform PEM > "$CERT_FILE" 2>/dev/null
+        # Capture OpenSSL output to extract connected IP and certificate payload
+        SCLIENT_OUT=$(echo Q | openssl s_client "${OPENSSL_ARGS[@]}" 2>&1)
+        echo "$SCLIENT_OUT" | openssl x509 -outform PEM > "$CERT_FILE" 2>/dev/null
 
-        # If --ip was not provided, determine the resolved IP
+        # Parse connected IP directly from OpenSSL stderr/stdout output
         if [ -n "$CLEAN_IP" ]; then
             CONNECTED_IP="$CLEAN_IP"
-        elif [ "$SCHEME" = "http" ] || [ "$SCHEME" = "https" ]; then
-            CURL_SCHEME="$SCHEME"
-            CURL_IP_ARGS=(-s -o /dev/null -w "%{remote_ip}")
-            if [ -n "$CURL_IP_FLAG" ]; then
-                CURL_IP_ARGS+=("$CURL_IP_FLAG")
-            fi
-            CONNECTED_IP=$(curl "${CURL_IP_ARGS[@]}" "${CURL_SCHEME}://${HOST}:${PORT}" 2>/dev/null)
         else
-            # For non-HTTP services like LDAPS, resolve IP address using standard tools
-            if command -v getent >/dev/null 2>&1; then
-                CONNECTED_IP=$(getent ahosts "$HOST" 2>/dev/null | awk '{print $1; exit}')
-            elif command -v host >/dev/null 2>&1; then
-                CONNECTED_IP=$(host "$HOST" 2>/dev/null | awk '/has address/ {print $4; exit}')
-            elif command -v nslookup >/dev/null 2>&1; then
-                CONNECTED_IP=$(nslookup "$HOST" 2>/dev/null | awk '/^Address: / {print $2; exit}')
-            fi
+            CONNECTED_IP=$(echo "$SCLIENT_OUT" | grep -E -i '^Connecting to ' | head -n 1 | awk '{print $3}')
         fi
     fi
 fi
