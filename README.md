@@ -179,8 +179,10 @@ debian@trixie ~$ ./cert-info.sh --crl -4 www.geant.org
 [+] Certificate with serial 542bfb96e6dea4458696fad63454d6c2 is not in revocation list
 ```
 
-```json
+```console
 debian@forky ~$ ./cert-info.sh --crl -6 --print-crt www.geant.org --json
+```
+```json
 {
   "crl": "http://crl.harica.gr/HARICA-GEANT-TLS-R1.crl",
   "crl_entries": 198607,
