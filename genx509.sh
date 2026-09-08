@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# set -x
 SIGN_TYPES=(CA-signed Self-signed)
 KEY_TYPES=(ECC RSA)
 EC_CURVES=(prime256v1 secp384r1)
@@ -106,42 +106,28 @@ else
 fi
 
 CN="$1"
-shift
 
-if [[ "$SIGN_TYPE" == "CA-signed" ]]; then
-  OPENSSL_ARGS+=(-subj "/CN=${CN}")
-  if [[ $# -ge 1 ]]; then
-    SAN_LIST=""
-    for san in "$@"; do
-      SAN_LIST="${SAN_LIST}DNS:${san},"
-    done
-    SAN_LIST="${SAN_LIST%,}"
+OPENSSL_ARGS+=(-subj "/CN=${CN}")
 
-    CONFIG_CONTENTS=$(printf "[req]\ndistinguished_name=rdn\n[rdn]\n[SAN]\nsubjectAltName=%s\n" "${SAN_LIST}")
-
-    if [[ -n "$PRIVATE_KEY" ]]; then
-      echo "$PRIVATE_KEY" | openssl req "${OPENSSL_ARGS[@]}" \
-        -reqexts SAN -extensions SAN \
-        -config <(printf "%s" "$CONFIG_CONTENTS")
-    else
-      openssl req "${OPENSSL_ARGS[@]}" \
-        -reqexts SAN -extensions SAN \
-        -config <(printf "%s" "$CONFIG_CONTENTS")
-    fi
-  else
-    if [[ -n "$PRIVATE_KEY" ]]; then
-      echo "$PRIVATE_KEY" | openssl req "${OPENSSL_ARGS[@]}"
-    else
-      openssl req "${OPENSSL_ARGS[@]}"
-    fi
-  fi
-elif [[ "$SIGN_TYPE" == "Self-signed" ]]; then
+if [[ "$SIGN_TYPE" == "Self-signed" ]]; then
   days=$(( ((2**31) - 1 - $(date +%s)) / 86400 ))
-  OPENSSL_ARGS+=(-days "${days}" -x509 -subj "/CN=${CN}")
+  OPENSSL_ARGS+=(-days "${days}" -x509)
+fi
 
-  if [[ -n "$PRIVATE_KEY" ]]; then
-    echo "$PRIVATE_KEY" | openssl req "${OPENSSL_ARGS[@]}"
-  else
-    openssl req "${OPENSSL_ARGS[@]}"
-  fi
+SAN_LIST=""
+for san in "$@"; do
+  SAN_LIST="${SAN_LIST}DNS:${san},"
+done
+SAN_LIST="${SAN_LIST%,}"
+
+CONFIG_CONTENTS=$(printf "[req]\ndistinguished_name=rdn\n[rdn]\n[SAN]\nsubjectAltName=%s\n" "${SAN_LIST}")
+
+if [[ -n "$PRIVATE_KEY" ]]; then
+  echo "$PRIVATE_KEY" | openssl req "${OPENSSL_ARGS[@]}" \
+    -reqexts SAN -extensions SAN \
+    -config <(printf "%s" "$CONFIG_CONTENTS")
+else
+  openssl req "${OPENSSL_ARGS[@]}" \
+    -reqexts SAN -extensions SAN \
+    -config <(printf "%s" "$CONFIG_CONTENTS")
 fi
