@@ -115,8 +115,15 @@ if [[ "$SIGN_TYPE" == "Self-signed" ]]; then
 fi
 
 SAN_LIST=""
+ipv4_regex='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
+ipv6_regex='^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$'
+
 for san in "$@"; do
-  SAN_LIST="${SAN_LIST}DNS:${san},"
+  if [[ $san =~ $ipv4_regex ]] || [[ $san =~ $ipv6_regex ]]; then
+    SAN_LIST="${SAN_LIST}IP:${san},"
+  else
+    SAN_LIST="${SAN_LIST}DNS:${san},"
+  fi
 done
 SAN_LIST="${SAN_LIST%,}"
 
