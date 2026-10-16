@@ -91,6 +91,19 @@ IP_VERSION_FLAG=""
 INPUT=""
 CONNECTED_IP=""
 
+# Helper function to handle errors cleanly for both plain text and JSON output modes
+handle_error() {
+    local error_msg="$1"
+    if [ "$OUTPUT_JSON" -eq 1 ] && command -v jq >/dev/null 2>&1; then
+        jq -n -S \
+          --arg timestamp "$EXECUTION_TIMESTAMP" \
+          --arg error "$error_msg" \
+          '{error: $error, timestamp: $timestamp}'
+    fi
+    echo "Error: $error_msg" >&2
+    exit 1
+}
+
 # Parse command line options
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -123,8 +136,7 @@ while [[ $# -gt 0 ]]; do
                 OVERRIDE_IP="$2"
                 shift 2
             else
-                echo "Error: Argument '--ip' requires a non-empty IP address value." >&2
-                exit 1
+                handle_error "Argument '--ip' requires a non-empty IP address value."
             fi
             ;;
         -h|--help)
@@ -135,9 +147,7 @@ while [[ $# -gt 0 ]]; do
             if [ -z "$INPUT" ]; then
                 INPUT="$1"
             else
-                echo "Error: Unexpected argument '$1'." >&2
-                echo "Run '$SCRIPT_NAME --help' for usage instructions." >&2
-                exit 1
+                handle_error "Unexpected argument '$1'. Run '$SCRIPT_NAME --help' for usage instructions."
             fi
             shift
             ;;
@@ -270,8 +280,7 @@ else
 
         CONNECTED_IP=$(curl "${CURL_ARGS[@]}" -w "%{remote_ip}" "$INPUT" -o "$TMP_DIR/downloaded_raw" 2>/dev/null)
         if [ $? -ne 0 ] || [ ! -s "$TMP_DIR/downloaded_raw" ]; then
-            echo "Error: Failed to download certificate from $INPUT" >&2
-            exit 1
+            handle_error "Failed to download certificate from $INPUT"
         fi
 
         # Convert DER to PEM if needed
@@ -304,8 +313,7 @@ CONNECTED_IP="${CONNECTED_IP:-$CLEAN_IP}"
 
 # Verify the certificate payload was successfully parsed
 if [ ! -s "$CERT_FILE" ] || ! openssl x509 -in "$CERT_FILE" -noout 2>/dev/null; then
-    echo "Error: Failed to obtain a valid X.509 certificate from '$INPUT'." >&2
-    exit 1
+    handle_error "Failed to obtain a valid X.509 certificate from '$INPUT'."
 fi
 
 # Step 2: Extract Certificate Metadata
@@ -461,30 +469,22 @@ if [ -n "$CRL_URL" ]; then
                     log "[+] Certificate with serial $SERIAL is not in revocation list"
                 fi
             else
-                if [ "$OUTPUT_JSON" -eq 0 ]; then
-                    echo "Error: Unable to parse downloaded CRL with OpenSSL." >&2
-                    exit 1
-                fi
+                handle_error "Unable to parse downloaded CRL with OpenSSL."
             fi
         else
-            if [ "$OUTPUT_JSON" -eq 0 ]; then
-                echo "Error: Failed to download CRL from $CRL_URL" >&2
-                exit 1
-            fi
+            handle_error "Failed to download CRL from $CRL_URL"
         fi
     fi
 else
-    if [ "$CHECK_CRL" -eq 1 ] && [ "$OUTPUT_JSON" -eq 0 ]; then
-        echo "Error: No HTTP/HTTPS CRL Distribution Point found in certificate." >&2
-        exit 1
+    if [ "$CHECK_CRL" -eq 1 ]; then
+        handle_error "No HTTP/HTTPS CRL Distribution Point found in certificate."
     fi
 fi
 
 # Step 7: Output JSON if requested
 if [ "$OUTPUT_JSON" -eq 1 ]; then
     if ! command -v jq >/dev/null 2>&1; then
-        echo "Error: 'jq' command not found. Please install jq to use --json." >&2
-        exit 1
+        handle_error "'jq' command not found. Please install jq to use --json."
     fi
 
     # Build base JSON object
